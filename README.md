@@ -225,6 +225,7 @@ The model architecture is designed to capture spatial features with CNN layers a
 Demo
 
 A demo video showcasing the application's functionality can be found here.
+[![ASL Hand Sign to Text Translator]](https://github.com/kushagra8881/asl_recognisation/blob/main/asl.mp4)
 Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request for any improvements or bug fixes.
