@@ -39,7 +39,7 @@ Installation
 
     sh
 
-git clone https://github.com/yourusername/asl-hand-sign-to-text.git
+git clone https://github.com/kushagra8881/asl_recognisation.git
 cd asl-hand-sign-to-text
 
 Install the required packages:
