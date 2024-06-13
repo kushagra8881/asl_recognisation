@@ -4,7 +4,7 @@ import time
 import numpy as np
 from keras.models import load_model
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 
 
 mpHands = mp.solutions.hands
@@ -59,8 +59,19 @@ while True:
 
                 if result in asl_dict:
                     result_text = asl_dict[result]
-                    a.append(result_text)
-                    cv2.putText(white_screen, ''.join(a), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 3)
+                    print(result_text)
+                    if result_text == 'nothing':
+                        break
+                    elif result_text == 'space':
+                        a.append(' ')
+                    elif result_text == 'del':
+                        white_screen = np.ones((300, 800, 3), np.uint8) * 255
+                        a=a[:-1]
+                    else:
+                      a.append(result_text)
+                      
+                      cv2.putText(white_screen, ''.join(a), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 3)
+                    print(a)
                 prediction_timer = time.time()
 
     ctime = time.time()
