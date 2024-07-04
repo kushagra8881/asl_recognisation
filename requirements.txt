@@ -1,11 +1,5 @@
 streamlit
+opencv-python
 mediapipe
 numpy
-pandas
-joblib
-scikit-learn
-tensorflow
-keras
-opencv-python-headless
-opencv-python
-wget
+tensorflow 
