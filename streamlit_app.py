@@ -6,20 +6,8 @@ from keras.models import load_model
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import time
 # Load the model
-def safe_load_model(model_path):
-    try:
-        model = load_model(model_path)
-        model.compile()  # Compile the model to avoid warning
-        return model
-    except Exception as e:
-        st.error(f"Error loading model: {e}")
-        return None
-
-# Load the model
-model_1 = safe_load_model("asl_detection_model.h5")
-
-if model_1 is None:
-    st.stop() 
+import joblib
+model_1 = joblib.load("asl_detection_model.pkl")
 # ASL dictionary
 asl_dict = {
     0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J',
