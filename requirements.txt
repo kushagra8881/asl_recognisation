@@ -5,7 +5,6 @@ pandas
 joblib
 scikit-learn
 streamlit-webrtc
-tensorflow
 av
 Pillow
 opencv-python-headless
