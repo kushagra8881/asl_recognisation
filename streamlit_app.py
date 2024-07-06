@@ -6,6 +6,7 @@ from keras.models import load_model
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, VideoTransformerContext
 import av
 import time
+
 # Load the model
 model_1 = load_model("asl_detection_model.h5")
 
@@ -42,7 +43,7 @@ class ASLVideoTransformer(VideoTransformerBase):
         self.white_screen = np.ones((300, 800, 3), np.uint8) * 255
         self.ptime = 0
 
-    def transform(self, frame):
+    def transform(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
 
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
