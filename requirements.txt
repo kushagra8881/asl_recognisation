@@ -2,7 +2,7 @@ streamlit
 mediapipe
 numpy
 pandas
-jobli
+joblib
 scikit-learn
 streamlit-webrtc
 tensorflow
