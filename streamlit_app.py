@@ -1,6 +1,7 @@
 import streamlit as st
 import cv2
-import mediapipe as mp
+from mediapipe.solutions import hands
+from mediapipe.solutions import drawing_utils
 import numpy as np
 from keras.models import load_model
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
@@ -19,9 +20,9 @@ asl_dict = {
 }
 
 # Initialize mediapipe hands
-mpHands = mp.solutions.hands
+mpHands =hands
 hands = mpHands.Hands()
-mpDraw = mp.solutions.drawing_utils
+mpDraw = drawing_utils()
 
 # Timing variables
 prediction_timer = time.time()
