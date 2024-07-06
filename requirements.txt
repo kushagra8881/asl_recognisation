@@ -4,3 +4,4 @@ mediapipe
 tensorflow
 protobuf
 streamlit-webrtc
+joblib
