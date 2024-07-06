@@ -2,12 +2,14 @@ import streamlit as st
 import cv2
 import mediapipe as mp
 import numpy as np
+import time
+import joblib
 from keras.models import load_model
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
-import time
-# Load the model
-import joblib
+
+# Load the ASL detection model
 model_1 = joblib.load("asl_detection_model.pkl")
+
 # ASL dictionary
 asl_dict = {
     0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J',
@@ -15,15 +17,10 @@ asl_dict = {
     19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z', 26: 'del', 27: 'nothing', 28: 'space'
 }
 
-# Initialize mediapipe hands
+# Initialize Mediapipe hands
 mpHands = mp.solutions.hands
 hands = mpHands.Hands()
 mpDraw = mp.solutions.drawing_utils
-
-# Initialize timing variables
-ptime = 0
-prediction_timer = 0
-text_output = []
 
 # White screen for displaying recognized text
 white_screen = np.ones((300, 800, 3), np.uint8) * 255
