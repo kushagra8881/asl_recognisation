@@ -1,11 +1,9 @@
 import streamlit as st
 import cv2
 import mediapipe as mp
-import time
 import numpy as np
 from keras.models import load_model
-from streamlit_webrtc import webrtc_streamer
-import av
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Load the model
 model_1 = load_model("asl_detection_model.h5")
@@ -24,7 +22,7 @@ mpDraw = mp.solutions.drawing_utils
 
 # Initialize timing variables
 ptime = 0
-prediction_timer = time.time()
+prediction_timer = 0
 text_output = []
 
 # White screen for displaying recognized text
@@ -37,17 +35,16 @@ def draw_text_on_white_screen(white_screen, text_output):
         y_position = 70 + idx * 30  # Adjust the y position for each line
         cv2.putText(white_screen, line, (10, y_position), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 3)
 
-def main():
-    st.title("ASL Recognition with Streamlit and WebRTC")
-    
-    # Function to process each frame
-    def handle_frame(frame):
+class ASLVideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.ptime = 0
+        self.prediction_timer = time.time()
+        self.text_output = []
+        self.white_screen = np.ones((300, 800, 3), np.uint8) * 255
+
+    def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")
-
-        # Flip and rotate the image for correct orientation
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        # Process the image and find hand landmarks
         results = hands.process(imgRGB)
 
         if results.multi_hand_landmarks:
@@ -61,54 +58,47 @@ def main():
                     bbox[2] = max(bbox[2], cx)
                     bbox[3] = max(bbox[3], cy)
 
-                # Draw bounding box around the hand
                 cv2.rectangle(img, (bbox[0] - 30, bbox[1] - 30), (bbox[2] + 30, bbox[3] + 30), (255, 0, 255), 2)
 
-                # Perform prediction every 2 seconds
-                if time.time() - prediction_timer >= 2:
+                if time.time() - self.prediction_timer >= 2:
                     hand_img = img[bbox[1] - 30:bbox[3] + 30, bbox[0] - 30:bbox[2] + 30]
                     hand_img = cv2.resize(hand_img, (64, 64))
                     hand_img = np.expand_dims(hand_img, axis=0)
                     hand_img = hand_img.astype('float32') / 255.0
 
-                    # Predict the sign
                     result = model_1.predict(hand_img)
                     result = np.argmax(result)
 
                     if result in asl_dict:
                         result_text = asl_dict[result]
-                        st.write(result_text)
                         if result_text == 'nothing':
                             continue
                         elif result_text == 'space':
-                            text_output.append(' ')
+                            self.text_output.append(' ')
                         elif result_text == 'del':
-                            text_output = text_output[:-1]
+                            self.text_output = self.text_output[:-1]
                         else:
-                            text_output.append(result_text)
+                            self.text_output.append(result_text)
 
-                        # Update the white screen with recognized text
-                        white_screen = np.ones((300, 800, 3), np.uint8) * 255
-                        draw_text_on_white_screen(white_screen, text_output)
-                        st.write(text_output)
-                    prediction_timer = time.time()
+                        self.white_screen = np.ones((300, 800, 3), np.uint8) * 255
+                        draw_text_on_white_screen(self.white_screen, self.text_output)
+                    self.prediction_timer = time.time()
 
-        # Calculate and display FPS
         ctime = time.time()
-        fps = 1 / (ctime - ptime)
-        ptime = ctime
+        fps = 1 / (ctime - self.ptime)
+        self.ptime = ctime
         cv2.putText(img, f'FPS: {int(fps)}', (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
 
-        # Convert image to RGB
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        white_screen_rgb = cv2.cvtColor(white_screen, cv2.COLOR_BGR2RGB)
+        return img
 
-        # Display the images
-        st.image(img, channels='RGB')
-        st.image(white_screen_rgb, channels='RGB')
+def main():
+    st.title("ASL Recognition with Streamlit and WebRTC")
+    webrtc_ctx = webrtc_streamer(key="asl-recognition", video_transformer_factory=ASLVideoTransformer)
 
-    # Use webrtc_streamer to capture video from webcam
-    webrtc_ctx = webrtc_streamer(key="example", video_processor=handle_frame)
+    if webrtc_ctx.video_transformer:
+        stframe2 = st.empty()
+        white_screen_rgb = cv2.cvtColor(webrtc_ctx.video_transformer.white_screen, cv2.COLOR_BGR2RGB)
+        stframe2.image(white_screen_rgb, channels='RGB')
 
 if __name__ == "__main__":
     main()
