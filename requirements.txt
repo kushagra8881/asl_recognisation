@@ -1,11 +1,6 @@
-streamlit
-mediapipe
-numpy
-pandas
-joblib
-scikit-learn
-streamlit-webrtc
-tensorflow
-av
-Pillow
-opencv-python-headless
+streamlit==1.36.0
+opencv-python==4.7.0.72
+mediapipe==0.9.1.0
+tensorflow==2.10.0
+streamlit-webrtc==0.43.0
+
