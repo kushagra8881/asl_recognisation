@@ -4,7 +4,7 @@ import mediapipe as mp
 import numpy as np
 from keras.models import load_model
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
-
+import time
 # Load the model
 model_1 = load_model("asl_detection_model.h5")
 
