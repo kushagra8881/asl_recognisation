@@ -1,6 +1,6 @@
-streamlit==1.36.0
-opencv-python==4.7.0.72
-mediapipe==0.9.1.0
-tensorflow==2.10.0
-protobuf>=3.9.2,<4
-streamlit-webrtc==0.43.0
+streamlit
+opencv-python
+mediapipe
+tensorflow
+protobuf
+streamlit-webrtc
