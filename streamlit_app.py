@@ -1,11 +1,11 @@
 import streamlit as st
 import cv2
 import mediapipe as mp
-import time
 import numpy as np
 from keras.models import load_model
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, VideoTransformerContext
-
+import av
+import time
 # Load the model
 model_1 = load_model("asl_detection_model.h5")
 
@@ -21,8 +21,7 @@ mpHands = mp.solutions.hands
 hands = mpHands.Hands()
 mpDraw = mp.solutions.drawing_utils
 
-# Initialize timing variables
-ptime = 0
+# Timing variables
 prediction_timer = time.time()
 text_output = []
 
@@ -41,6 +40,7 @@ class ASLVideoTransformer(VideoTransformerBase):
         self.prediction_timer = time.time()
         self.text_output = []
         self.white_screen = np.ones((300, 800, 3), np.uint8) * 255
+        self.ptime = 0
 
     def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")
@@ -86,12 +86,11 @@ class ASLVideoTransformer(VideoTransformerBase):
                     self.prediction_timer = time.time()
 
         ctime = time.time()
-        fps = 1 / (ctime - ptime)
-        ptime = ctime
+        fps = 1 / (ctime - self.ptime)
+        self.ptime = ctime
         cv2.putText(img, f'FPS: {int(fps)}', (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
 
-        white_screen_rgb = cv2.cvtColor(self.white_screen, cv2.COLOR_BGR2RGB)
-        return img, white_screen_rgb
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
 
 def main():
     st.title("ASL Recognition with Streamlit")
@@ -99,12 +98,9 @@ def main():
     webrtc_ctx = webrtc_streamer(key="example", video_transformer_factory=ASLVideoTransformer)
 
     if webrtc_ctx.video_transformer:
-        stframe1 = st.empty()
         stframe2 = st.empty()
-
         while webrtc_ctx.state.playing:
-            img, white_screen_rgb = webrtc_ctx.video_transformer.transform()
-            stframe1.image(img, channels='RGB')
+            white_screen_rgb = cv2.cvtColor(webrtc_ctx.video_transformer.white_screen, cv2.COLOR_BGR2RGB)
             stframe2.image(white_screen_rgb, channels='RGB')
 
 if __name__ == "__main__":
