@@ -1,11 +1,11 @@
 import streamlit as st
-import cv2
 import mediapipe as mp
 import numpy as np
 from keras.models import load_model
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, VideoTransformerContext
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import av
 import time
+from PIL import Image, ImageDraw, ImageFont
 
 # Load the model
 model_1 = load_model("asl_detection_model.h5")
@@ -27,26 +27,28 @@ prediction_timer = time.time()
 text_output = []
 
 # White screen for displaying recognized text
-white_screen = np.ones((300, 800, 3), np.uint8) * 255
+white_screen = Image.new("RGB", (800, 300), "white")
+font = ImageFont.load_default()
 
 def draw_text_on_white_screen(white_screen, text_output):
     max_words_per_line = 30
     lines = [' '.join(text_output[i:i + max_words_per_line]) for i in range(0, len(text_output), max_words_per_line)]
+    draw = ImageDraw.Draw(white_screen)
     for idx, line in enumerate(lines):
         y_position = 70 + idx * 30  # Adjust the y position for each line
-        cv2.putText(white_screen, line, (10, y_position), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 3)
+        draw.text((10, y_position), line, fill="black", font=font)
 
 class ASLVideoTransformer(VideoTransformerBase):
     def __init__(self):
         self.prediction_timer = time.time()
         self.text_output = []
-        self.white_screen = np.ones((300, 800, 3), np.uint8) * 255
+        self.white_screen = Image.new("RGB", (800, 300), "white")
         self.ptime = 0
 
     def transform(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
 
-        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        imgRGB = np.flip(img, axis=2)  # Convert BGR to RGB
         results = hands.process(imgRGB)
 
         if results.multi_hand_landmarks:
@@ -60,13 +62,12 @@ class ASLVideoTransformer(VideoTransformerBase):
                     bbox[2] = max(bbox[2], cx)
                     bbox[3] = max(bbox[3], cy)
 
-                cv2.rectangle(img, (bbox[0] - 30, bbox[1] - 30), (bbox[2] + 30, bbox[3] + 30), (255, 0, 255), 2)
-
                 if time.time() - self.prediction_timer >= 2:
                     hand_img = img[bbox[1] - 30:bbox[3] + 30, bbox[0] - 30:bbox[2] + 30]
-                    hand_img = cv2.resize(hand_img, (64, 64))
+                    hand_img = Image.fromarray(hand_img)
+                    hand_img = hand_img.resize((64, 64))
                     hand_img = np.expand_dims(hand_img, axis=0)
-                    hand_img = hand_img.astype('float32') / 255.0
+                    hand_img = np.array(hand_img).astype('float32') / 255.0
 
                     result = model_1.predict(hand_img)
                     result = np.argmax(result)
@@ -82,14 +83,18 @@ class ASLVideoTransformer(VideoTransformerBase):
                         else:
                             self.text_output.append(result_text)
 
-                        self.white_screen = np.ones((300, 800, 3), np.uint8) * 255
+                        self.white_screen = Image.new("RGB", (800, 300), "white")
                         draw_text_on_white_screen(self.white_screen, self.text_output)
                     self.prediction_timer = time.time()
 
         ctime = time.time()
         fps = 1 / (ctime - self.ptime)
         self.ptime = ctime
-        cv2.putText(img, f'FPS: {int(fps)}', (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
+        fps_text = f'FPS: {int(fps)}'
+        img_pil = Image.fromarray(img)
+        draw = ImageDraw.Draw(img_pil)
+        draw.text((10, 70), fps_text, fill="magenta", font=font)
+        img = np.array(img_pil)
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
@@ -101,8 +106,8 @@ def main():
     if webrtc_ctx.video_transformer:
         stframe2 = st.empty()
         while webrtc_ctx.state.playing:
-            white_screen_rgb = cv2.cvtColor(webrtc_ctx.video_transformer.white_screen, cv2.COLOR_BGR2RGB)
-            stframe2.image(white_screen_rgb, channels='RGB')
+            white_screen_rgb = np.array(webrtc_ctx.video_transformer.white_screen)
+            stframe2.image(white_screen_rgb)
 
 if __name__ == "__main__":
     main()

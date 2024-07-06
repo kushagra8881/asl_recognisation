@@ -8,3 +8,4 @@ scikit-learn
 streamlit-webrtc
 tensorflow
 av
+Pillow
