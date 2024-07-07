@@ -6,3 +6,4 @@ protobuf
 streamlit-webrtc
 joblib
 numpy
+json
