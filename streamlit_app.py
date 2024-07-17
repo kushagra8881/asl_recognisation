@@ -96,7 +96,7 @@ def main():
         video_processor_factory=ASLVideoProcessor,
         async_processing=True,
     )
-    st.image("model.png", use_column_width=True)
-    st.image("image_1.png", use_column_width=True)
+st.image("model.png", use_column_width=True)
+st.image("image_1.png", use_column_width=True)
 if __name__ == "__main__":
     main()
